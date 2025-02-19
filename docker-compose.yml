@@ -1,0 +1,10 @@
+version: '3'
+services:
+  prose-polish:
+    image: prose-polish:latest
+    container_name: prose-polish
+    restart: always
+    ports:
+      - "3333:3000"
+    environment:
+      - MODE=1
