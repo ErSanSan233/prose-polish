@@ -12,6 +12,9 @@ export const CONFIG = {
     // 获取方式：访问 https://platform.deepseek.com
     DEEPSEEK_API_KEY: 'your-deepseek-api-key-here',
 
+    // Ollama配置
+    OLLAMA_BASE_URL: 'http://localhost:11434', //可在此处修改端口
+
     // 自定义模型配置
     // 如果不需要自定义模型，可以保持为 null
     CUSTOM_MODEL: {

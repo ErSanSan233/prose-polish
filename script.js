@@ -381,13 +381,13 @@ async function showOllamaDialog() {
     // 获取可用模型列表
     try {
         // 首先检查 Ollama 服务是否在运行
-        const healthCheck = await fetch('http://localhost:11434');
+        const healthCheck = await fetch(CONFIG.OLLAMA_BASE_URL);
         if (!healthCheck.ok) {
             throw new Error('无法连接到 Ollama 服务');
         }
         
         // 获取已安装的模型列表
-        const response = await fetch('http://localhost:11434/api/tags');
+        const response = await fetch(`${CONFIG.OLLAMA_BASE_URL}/api/tags`);
         if (!response.ok) {
             throw new Error('无法获取模型列表');
         }
@@ -530,7 +530,7 @@ async function callAIAPI(message, model) {
         }
 
         try {
-            const response = await fetch('http://localhost:11434/api/generate', {
+            const response = await fetch(`${CONFIG.OLLAMA_BASE_URL}/api/generate`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -539,7 +539,7 @@ async function callAIAPI(message, model) {
                     model: window.ollamaModel,
                     prompt: message,
                     system: API_CONFIG.SYSTEM_MESSAGE.content,
-                    stream: false,
+                    stream: true, // 启用流式传输
                     options: {
                         temperature: 0.7,
                         top_p: 0.9
@@ -553,9 +553,28 @@ async function callAIAPI(message, model) {
                 throw new Error(`Ollama API调用失败: ${errorData.error || '未知错误'}`);
             }
 
-            const data = await response.json();
-            console.log('Ollama响应数据:', data);
-            return data.response;
+            // 处理流式响应
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+            let result = '';
+            promptOutput.textContent = '';
+            const processStream = async () => {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    try{
+                        const chunk = JSON.parse(decoder.decode(value, { stream: true }));
+                        if(chunk.response) {
+                            result += chunk.response;
+                            promptOutput.textContent += chunk.response;
+                            promptOutput.scrollTop = promptOutput.scrollHeight;
+                        }
+                    } catch { }
+                }
+                return result;
+            };
+
+            return processStream();
         } catch (error) {
             if (error.message.includes('Failed to fetch')) {
                 throw new Error('无法连接到 Ollama 服务。请确保：\n1. Ollama 已安装\n2. 已运行 `ollama serve`\n3. 选择的模型已经下载并运行');
