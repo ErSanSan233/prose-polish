@@ -292,11 +292,26 @@ export class PromptCardManager {
     }
 
     // 添加新卡片
-    addCard(title, prompt) {
-        let card = new PromptCard(generateUniqueId(), title, prompt);
-        
-        while (this.isIdExists(card.id)) {
+    addCard(title, prompt, id = null) {
+        let card;
+
+        if (id) {
+            // 使用指定的ID创建卡片
+            card = new PromptCard(id, title, prompt);
+            // 检查ID是否已存在，如果存在则生成新ID
+            if (this.isIdExists(card.id)) {
+                console.warn(`ID ${id} 已存在，将生成新ID`);
+                card = new PromptCard(generateUniqueId(), title, prompt);
+                while (this.isIdExists(card.id)) {
+                    card = new PromptCard(generateUniqueId(), title, prompt);
+                }
+            }
+        } else {
+            // 生成新ID
             card = new PromptCard(generateUniqueId(), title, prompt);
+            while (this.isIdExists(card.id)) {
+                card = new PromptCard(generateUniqueId(), title, prompt);
+            }
         }
 
         this.cards.set(card.id, card);
