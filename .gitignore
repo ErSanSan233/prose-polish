@@ -1,5 +1,8 @@
 # 配置文件
 config.js
+.env
+.env.local
+.env.*.local
 
 # 依赖目录
 node_modules/

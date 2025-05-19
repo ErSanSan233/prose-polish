@@ -1,9 +1,7 @@
 import { PromptCardManager } from './js/promptCard.js';
 import { MarkdownHandler } from './js/markdownHandler.js';
 import { ConnectionManager } from './js/connectionManager.js';
-import { CONFIG } from './config.js';
 import { initializeCardManagement } from './js/promptCard.js';
-
 
 // Ollama配置
 const OLLAMA_BASE_URL = 'http://localhost:11434'; //可在此处修改端口
@@ -22,14 +20,28 @@ const MODEL_CONFIG = {
 // 检测是否为开发模式
 const isDevelopment = window.location.hostname === '127.0.0.1';
 
-// 更新配置
-const API_CONFIG = {
-    TONGYI_API_KEY: CONFIG.TONGYI_API_KEY,
+// 初始化配置
+let API_CONFIG = {
+    TONGYI_API_KEY: null,
     API_URL: isDevelopment ? null : 'http://localhost:3000/api/chat',
-    DEEPSEEK_API_KEY: CONFIG.DEEPSEEK_API_KEY,
-    CUSTOM_MODEL: CONFIG.CUSTOM_MODEL,
-    SYSTEM_MESSAGE: CONFIG.SYSTEM_MESSAGE
+    DEEPSEEK_API_KEY: null,
+    CUSTOM_MODEL: null,
+    SYSTEM_MESSAGE: null
 };
+
+// 从服务器获取配置
+async function initializeConfig() {
+    try {
+        const response = await fetch('/api/config');
+        const config = await response.json();
+        API_CONFIG.SYSTEM_MESSAGE = config.SYSTEM_MESSAGE;
+    } catch (error) {
+        console.error('获取配置失败:', error);
+    }
+}
+
+// 初始化配置
+initializeConfig();
 
 // DOM 元素
 const promptCards = document.querySelectorAll('.prompt-card');

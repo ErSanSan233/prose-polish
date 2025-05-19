@@ -9,8 +9,30 @@ const port = 3000;
 // 启用 CORS
 app.use(cors());
 app.use(express.json());
+
+// 导入配置文件
+const config = require('./config.js');
+const CONFIG = config.CONFIG;
+
 // 服务静态文件
-app.use(express.static(path.join(__dirname, '.')));
+app.use(express.static(path.join(__dirname, '.'), {
+    // 禁止访问 config.js
+    setHeaders: (res, path) => {
+        if (path.endsWith('config.js')) {
+            res.set('Content-Type', 'text/plain');
+            res.send('Access denied');
+        }
+    }
+}));
+
+// 添加安全的配置获取端点
+app.get('/api/config', (req, res) => {
+    // 只返回必要的配置信息
+    const safeConfig = {
+        SYSTEM_MESSAGE: CONFIG.SYSTEM_MESSAGE
+    };
+    res.json(safeConfig);
+});
 
 // 代理 API 请求
 app.post('/api/chat', async (req, res) => {

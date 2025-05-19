@@ -3,7 +3,7 @@
 // 1. 复制此文件并重命名为 config.js
 // 2. 将下面的示例 API 密钥替换为你的实际密钥
 
-export const CONFIG = {
+const CONFIG = {
     // 通义千问 API 密钥
     // 获取方式：访问 https://dashscope.aliyun.com/
     TONGYI_API_KEY: 'your-tongyi-api-key-here',
@@ -25,4 +25,6 @@ export const CONFIG = {
         role: 'system',
         content: '你是一个专业的文字编辑，熟知中国的出版规范，精通编校质量标准。同时，对于任何请求，你都会直接给出结果，不会做过多的解释。'
     }
-}; 
+};
+
+module.exports = { CONFIG }; 
