@@ -4,6 +4,7 @@ import { MarkdownHandler } from './js/markdownHandler.js';
 import { ConnectionManager } from './js/connectionManager.js';
 import { CONFIG } from './config.js';
 import { initializeCardManagement } from './js/promptCard.js';
+import { setupAutoSave } from './js/storageManager.js';
 
 
 // Ollama配置
@@ -44,9 +45,14 @@ const cardManager = new PromptCardManager(cardContainer);
 const markdownHandler = new MarkdownHandler(paragraphContainer);
 const connectionManager = new ConnectionManager();
 
+// 初始化存储管理器和自动保存功能
+const { storageManager, restoreData } = setupAutoSave();
+
 // 将管理器暴露到全局，供其他模块使用
 window.cardManager = cardManager;
 window.connectionManager = connectionManager;
+window.markdownHandler = markdownHandler;
+window.storageManager = storageManager;
 
 // 监听窗口大小变化和滚动，更新连接线
 window.addEventListener('resize', () => connectionManager.updateConnections());
@@ -138,10 +144,43 @@ function addDefaultTextCard() {
     anotherCard.style.top = '170px'; // 在第一个卡片下方
 }
 
-// 在页面加载完成后添加默认卡片
-document.addEventListener('DOMContentLoaded', () => {
-    addDefaultCards();  // 添加默认提示词卡片
-    addDefaultTextCard();  // 添加默认文本卡片
+// 在页面加载完成后先尝试恢复数据，如果没有恢复成功再添加默认卡片
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log("页面加载完成，开始初始化...");
+
+    // 确保全局对象已初始化
+    if (!window.cardManager) {
+        console.error("cardManager未初始化");
+    }
+    if (!window.markdownHandler) {
+        console.error("markdownHandler未初始化");
+    }
+    if (!window.connectionManager) {
+        console.error("connectionManager未初始化");
+    }
+    if (!window.storageManager) {
+        console.error("storageManager未初始化");
+    }
+
+    // 初始化卡片管理功能
+    initializeCardManagement();
+    // 初始化模型选择器
+    initializeModelSelector();
+
+    // 直接恢复数据
+    console.log("开始恢复数据...");
+    restoreData().then((restored) => {
+        // 如果没有恢复成功，则添加默认卡片
+        if (!restored) {
+            console.log("恢复失败，添加默认卡片...");
+            addDefaultCards(); // 添加默认提示词卡片
+            addDefaultTextCard(); // 添加默认文本卡片
+        } else {
+            console.log("数据恢复成功");
+            // 直接更新连接线
+            connectionManager.updateConnections();
+        }
+    });
 });
 
 // 监听卡片选择
@@ -797,15 +836,6 @@ async function callAIAPI(message, model) {
     
     return mockApiCall(message, model);
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    // 初始化卡片管理功能
-    initializeCardManagement();
-    // 初始化模型选择器
-    initializeModelSelector();
-    
-    // ... existing initialization code ...
-});
 
 // 修改 PromptCardManager 类中的 selectCard 函数
 function selectCard(cardId) {

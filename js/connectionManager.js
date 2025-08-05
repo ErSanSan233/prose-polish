@@ -268,6 +268,17 @@ export class ConnectionManager {
 
     // 完成连接
     completeConnection(endPort) {
+        // 如果没有当前连接或起始端口，则创建一个新的连接线
+        if (!this.currentConnection) {
+            console.log("创建新的连接线");
+            const line = document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "path"
+            );
+            line.classList.add("connection-line");
+            this.svgContainer.appendChild(line);
+            this.currentConnection = line;
+        }
         // 移除防止选择的类
         document.body.classList.remove('connecting-mode');
 
@@ -316,6 +327,17 @@ export class ConnectionManager {
 
         // 存储连接信息
         const connectionId = `connection_${Date.now()}`;
+
+        // 记录端口ID信息，用于调试
+        const startPortId =
+            this.startPort.dataset.portId || this.startPort.dataset.cardId;
+        const endPortId = endPort.dataset.portId || endPort.dataset.cardId;
+        console.log(
+            `创建连接: ${connectionId}, 从 ${startPortId} (${this.getPortType(
+                this.startPort
+            )}) 到 ${endPortId} (${this.getPortType(endPort)})`
+        );
+
         this.connections.set(connectionId, {
             id: connectionId,
             startPort: this.startPort,
@@ -350,6 +372,16 @@ export class ConnectionManager {
         // 重置当前连接状态
         this.currentConnection = null;
         this.startPort = null;
+
+        // 触发保存操作，确保连接数据被保存
+        if (window.storageManager) {
+            console.log("连接创建完成，触发保存操作");
+            setTimeout(() => {
+                window.storageManager.saveToLocalStorage();
+            }, 100); // 短暂延迟，确保DOM更新完成
+        } else {
+            console.warn("storageManager不存在，无法保存连接数据");
+        }
     }
 
     // 取消连接
@@ -589,5 +621,18 @@ export class ConnectionManager {
         this.connections.clear();
         this.portConnections.clear();
         this.chainConnections.clear();
+    }
+    
+    // 获取端口类型
+    getPortType(port) {
+        if (port.classList.contains("text-card-port")) {
+            return "text-card-port";
+        } else if (port.classList.contains("text-card-chain-port")) {
+            return "text-card-chain-port";
+        } else if (port.classList.contains("connection-port")) {
+            return "connection-port";
+        } else {
+            return "unknown";
+        }
     }
 } 

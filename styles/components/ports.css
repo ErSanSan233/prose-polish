@@ -40,7 +40,7 @@
     width: 100vw;
     height: 100vh;
     pointer-events: none;
-    z-index: 10000;
+    z-index: 0;
 }
 
 /* SVG连接线 */
@@ -49,11 +49,13 @@
     stroke-width: 2;
     fill: none;
     pointer-events: none;
+    z-index: 5;
 }
 
 .connection-line.temp {
     stroke-dasharray: 4;
     animation: dash 1s linear infinite;
+    z-index: 1000;
 }
 
 @keyframes dash {
@@ -71,7 +73,7 @@
     height: 20px;
     cursor: crosshair;
     transition: all 0.2s;
-    z-index: 2;
+    z-index: 10;
     pointer-events: auto;
 }
 
